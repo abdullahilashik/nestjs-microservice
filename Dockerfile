@@ -16,5 +16,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 
-COPY --from=BUILD ./dist/tasks ./dist/tasks
-COPY --from=BUILD ./dist/api-gateway ./dist/api-gateway
+COPY --from=BUILD /app/dist/tasks ./dist/tasks
+COPY --from=BUILD /app/dist/api-gateway ./dist/api-gateway
