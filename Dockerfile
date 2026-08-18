@@ -1,20 +1,30 @@
+# STEP ONE: BUILD STAGE
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Copy dependency definitions and source code
 COPY package*.json ./
+COPY tsconfig*.json nest-cli.json ./
 RUN npm ci
+
+COPY apps/ ./apps/
+COPY libs/ ./libs/
+
+# Build shared libraries and applications
 RUN npm run build tasks
 RUN npm run build api-gateway
 
-COPY . .
-
-# STEP TWO PRODUCTION BUILD
-
-FROM node:20-alpine
+# STEP TWO: PRODUCTION STAGE
+FROM node:20-alpine AS production
 WORKDIR /app
+
+ENV NODE_ENV=production
 
 COPY package*.json ./
 RUN npm ci --only=production
 
-COPY --from=build /app/dist/tasks ./dist/tasks
-COPY --from=build /app/dist/api-gateway ./dist/api-gateway
+# Copy compiled JS bundles from build stage
+COPY --from=build /app/dist ./dist
+
+# Command overridden per service in docker-compose
+CMD ["node", "dist/apps/api-gateway/main.js"]

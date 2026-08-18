@@ -11,5 +11,31 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: api-gateway
+    # command: node dist/apps/api-gateway/main.js
+    ports:
+      - "3000:3000"
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+
+  tasks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: tasks
+    # command: node dist/apps/tasks/main.js
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+
 volumes:
   rabbitmq_data:
