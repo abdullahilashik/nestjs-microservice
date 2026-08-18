@@ -2,7 +2,7 @@ name: RabbitMQ CI/CD
 
 on:
   push:
-    branches: ['kafka']
+    branches: ['rmq']
 
 jobs:
   build-and-test:
