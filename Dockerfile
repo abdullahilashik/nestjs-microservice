@@ -1,4 +1,4 @@
-FROM node:20-alpine AS BUILD
+FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
@@ -16,5 +16,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 
-COPY --from=BUILD /app/dist/tasks ./dist/tasks
-COPY --from=BUILD /app/dist/api-gateway ./dist/api-gateway
+COPY --from=build /app/dist/tasks ./dist/tasks
+COPY --from=build /app/dist/api-gateway ./dist/api-gateway
