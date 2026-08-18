@@ -1,0 +1,14 @@
+### Create a new task
+
+GET http://localhost:3000/tasks
+
+
+### Create a new task
+POST http://localhost:3000/tasks/create
+Content-Type: application/json
+
+{
+    "name": "Create a clean CI/CD pipeliine",
+    "description": "Once the nestjs project is finished i need you to create a clean ci cd pipeline for me",
+    "status": "in-progress"
+}
