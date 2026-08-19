@@ -13,6 +13,7 @@ COPY libs/ ./libs/
 # Build shared libraries and applications
 RUN npm run build tasks
 RUN npm run build api-gateway
+RUN npm run build auth-service
 
 # STEP TWO: PRODUCTION STAGE
 FROM node:20-alpine AS production

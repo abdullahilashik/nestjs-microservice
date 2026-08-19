@@ -1,9 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { KafkaService } from './kafka.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { KAFKA_BROKER, KAFKA_CLIENT_ID, KAFKA_CONSUMER_GROUP } from './constants';
+import { KAFKA_BROKER, KAFKA_CLIENT_ID, KAFKA_CONSUMER_GROUP } from './constants/kafka.constants';
 
-const KAFKA_SERVICE = 'KAFKA_SERVICE';
+export const KAFKA_SERVICE = 'KAFKA_SERVICE';
 
 @Module({})
 export class KafkaModule {
@@ -18,16 +17,17 @@ export class KafkaModule {
             options: {
               client: {
                 clientId: KAFKA_CLIENT_ID,
-                brokers: [KAFKA_BROKER]
+                // Split comma-separated string from docker env if multiple brokers exist
+                brokers: KAFKA_BROKER.split(','),
               },
               consumer: {
-                groupId: consumerGroup ?? KAFKA_CONSUMER_GROUP
-              }
-            }
-          }
-        ])
+                groupId: consumerGroup ?? KAFKA_CONSUMER_GROUP,
+              },
+            },
+          },
+        ]),
       ],
-      exports: [ClientsModule]
+      exports: [ClientsModule],
     };
   }
 }

@@ -1,14 +1,12 @@
-export const KAFKA_BROKER = process.env.KAFKA_BROKER ?? 'localhost:9002';
+export const KAFKA_BROKER = process.env.KAFKA_BROKERS ?? 'localhost:9094';
 export const KAFKA_CLIENT_ID = "eventflowapp";
 export const KAFKA_CONSUMER_GROUP = "eventflowapp-consumer";
 
-// kafka topics
 export const KAFKA_TOPICS = {
     // auth events
     USER_REGISTERED: 'user.registered',
     USER_LOGIN: 'user.login',
     PASSWORD_RESET_REQUESTED: 'password.reset-requested',
-
 
     // event events
     EVENT_CREATED: 'event.created',
@@ -17,8 +15,8 @@ export const KAFKA_TOPICS = {
     EVENT_TICKET_CREATED: 'event.ticket.created',
     EVENT_CANCELLED: 'event.cancelled',
 
-    // ticket events
-    TICKET_PURCHASED: 'tickeet.purchased',
+    // ticket events (Fixed typo here)
+    TICKET_PURCHASED: 'ticket.purchased',
     TICKET_CANCELLED: 'ticket.cancelled',
     TICKET_CHECKED_IN: 'ticket.checked-in',
 

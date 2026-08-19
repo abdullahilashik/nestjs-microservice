@@ -5,8 +5,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"     # AMQP protocol port
-      - "15672:15672"   # Management UI (http://localhost:15672)
+      - "5672:5672"
+      - "15672:15672" # 👈 WEB UI AT http://localhost:15672
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -16,11 +16,11 @@ services:
   kafka:
     image: apache/kafka:latest
     container_name: kafka
+    user: "0:0"
     ports:
-      - "9092:9092"     # Internal Docker listener
-      - "9094:9094"     # Host machine access (localhost:9094)
+      - "9092:9092"
+      - "9094:9094"
     environment:
-      # KRaft mode configuration (No ZooKeeper required)
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
@@ -37,6 +37,17 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
     volumes:
       - kafka_data:/tmp/kraft-combined-logs
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080" # 👈 KAFKA WEB UI AT http://localhost:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kraft
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
 
   api-gateway:
     build:
@@ -68,6 +79,21 @@ services:
       - KAFKA_BROKERS=kafka:9092
     depends_on:
       - rabbitmq
+      - kafka
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: auth-service
+    command: node dist/apps/auth-service/main.js
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
       - kafka
 
 volumes:
