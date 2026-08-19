@@ -1,10 +1,10 @@
 import { SERVICES_PORTS } from '@app/common';
 import { KAFKA_SERVICE, KAFKA_TOPICS } from '@app/kafka';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
-export class AuthServiceService implements OnModuleInit {
+export class AuthServiceService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(KAFKA_SERVICE) private readonly kafkaClient: ClientKafka,
   ) { }
@@ -22,8 +22,16 @@ export class AuthServiceService implements OnModuleInit {
     await this.kafkaClient.connect();
   }
 
+  /**
+   * Disconnect the connection we just established when to free up resources
+   */
+  async onModuleDestroy() {
+    await this.kafkaClient.close();
+  }
+
   // Example Event Emitter (Fire-and-forget)
   async emitUserRegistered(userPayload: any) {
     this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, JSON.stringify(userPayload));
+    return { message: 'User registration completed' };
   }
 }
