@@ -1,15 +1,42 @@
+version: '3.8'
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"     # AMQP protocol port
+      - "15672:15672"   # Management UI (http://localhost:15672)
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"     # Internal Docker listener
+      - "9094:9094"     # Host machine access (localhost:9094)
+    environment:
+      # KRaft mode configuration (No ZooKeeper required)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9094'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9094'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
 
   api-gateway:
     build:
@@ -17,13 +44,16 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: api-gateway
-    # command: node dist/apps/api-gateway/main.js
+    command: node dist/apps/api-gateway/main.js
     ports:
       - "3000:3000"
     environment:
+      - NODE_ENV=production
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - KAFKA_BROKERS=kafka:9092
     depends_on:
       - rabbitmq
+      - kafka
 
   tasks:
     build:
@@ -31,11 +61,15 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: tasks
-    # command: node dist/apps/tasks/main.js
+    command: node dist/apps/tasks/main.js
     environment:
+      - NODE_ENV=production
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - KAFKA_BROKERS=kafka:9092
     depends_on:
       - rabbitmq
+      - kafka
 
 volumes:
   rabbitmq_data:
+  kafka_data:
